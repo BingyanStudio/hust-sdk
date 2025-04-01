@@ -7,6 +7,10 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
 
     // Bundler mode
     "moduleResolution": "bundler",

@@ -2,8 +2,12 @@
   "name": "hust-sdk",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "^22.13.14",
     "prettier": "3.5.3"
   },
   "peerDependencies": {
