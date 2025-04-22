@@ -1,1 +1,1 @@
-export class HUST {}
+export default class HUST {}
