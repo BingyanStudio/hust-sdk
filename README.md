@@ -2,6 +2,12 @@
 
 > _🚧 WIP 快速构建中（真快速吗）_
 
+## Requirements
+
+- Bun version >= 1.2.7
+
+## Installation
+
 To install dependencies:
 
 ```bash
@@ -13,5 +19,3 @@ To run:
 ```bash
 bun run index.ts
 ```
-
-This project was created using `bun init` in bun v1.2.5. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
