@@ -3,6 +3,30 @@ import { CookieMap, Cookie } from 'bun';
 export default class CookieManager {
   private cookies = new Map<string, CookieMap>();
 
+  /** 打印当前存储的 cookies */
+  watchCookies() {
+    const cookieData: Array<{ domain: string; name: string; value: string }> =
+      [];
+
+    this.cookies.forEach((cookieMap, domain) => {
+      for (const [key, value] of cookieMap) {
+        cookieData.push({
+          domain,
+          name: key,
+          value,
+        });
+      }
+    });
+
+    if (cookieData.length === 0) {
+      console.log('No cookies stored');
+      return;
+    }
+
+    console.log('Cookie Manager - Current Cookies:');
+    console.table(cookieData);
+  }
+
   parseCookies(setCookieHeaders: string[]): Cookie[] {
     return setCookieHeaders.map((setCookieHeader) =>
       Cookie.parse(setCookieHeader),
