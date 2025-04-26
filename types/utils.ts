@@ -1,10 +1,9 @@
+import { followRedirect } from '@/utils/request';
 /**
  * 重定向选项
  *
- * @path @/utils/request.ts followRedirect
+ * @path @/utils/request.ts {@link followRedirect}
  * @export
- * @interface RedirectOptions
- * @typedef {RedirectOptions}
  */
 export interface RedirectOptions {
   maxRedirects?: number; // 最大重定向次数

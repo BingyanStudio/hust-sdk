@@ -6,11 +6,13 @@ import { rsaEncrypt } from '@/utils/rsa';
 import { useCookie } from '@/utils/use-cookie';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import axios from 'axios';
+import { Cookie, CookieMap } from 'bun';
 
 export default class CASAuth {
   private readonly axios: AxiosInstance;
   private readonly cookieManager: CookieManager;
   private static CAS_URL = 'https://pass.hust.edu.cn/cas';
+  private static CAS_REDIRECT_DOMAIN = 'one.hust.edu.cn';
 
   constructor(cookieManager: CookieManager) {
     this.cookieManager = cookieManager;
@@ -34,7 +36,10 @@ export default class CASAuth {
     try {
       const response = await this.axios.get(`${CASAuth.CAS_URL}/login`);
 
-      return response.status === 302;
+      return (
+        response.status === 302 &&
+        response.headers.location.includes(CASAuth.CAS_REDIRECT_DOMAIN)
+      );
     } catch (e) {
       return false;
     }
@@ -66,6 +71,13 @@ export default class CASAuth {
     };
   }
 
+  /**
+   * 统一认证登录
+   *
+   * @async
+   * @param {LoginInfo} info 登录信息，学号和密码
+   * @returns {boolean} 登录成功返回 true，否则返回 false
+   */
   async login(info: LoginInfo) {
     const tickets = await this.getLoginTickets();
 
@@ -117,7 +129,10 @@ export default class CASAuth {
     //   );
     // }
 
-    return loginResponse.status === 302;
+    return (
+      loginResponse.status === 302 &&
+      loginResponse.headers.location.includes(CASAuth.CAS_REDIRECT_DOMAIN)
+    );
   }
 
   async testAuth() {
@@ -170,11 +185,48 @@ export default class CASAuth {
       console.log('testAuth error', e);
     }
   }
+
+  async testPE() {
+    const url = 'http://petyxy.hust.edu.cn/pft/app/resultList?periodId=20242';
+
+    try {
+      let response = await this.axios.get(url);
+
+      console.log('testPE success with status', response.status);
+      console.log('testPE response', response.data);
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async loginPETYXY(info: LoginInfo) {
+    const url = 'https://petyxy.hust.edu.cn/pft/app/resultList';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      await this.login(info);
+    }
+
+    try {
+      let response = await this.axios.get(url);
+      response = await followRedirect(response, this.axios);
+
+      // service 如果使用 https 会得到 500 状态码，暂不清楚原因，这里只能使用 http，后续请求也必须是 http。
+      response = await this.axios.get(
+        'https://pass.hust.edu.cn/cas/login?service=http://petyxy.hust.edu.cn/ggtypt/dologin',
+      );
+
+      response = await followRedirect(response, this.axios);
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 const cookieManager = new CookieManager();
 const casAuth = new CASAuth(cookieManager);
-// casAuth.getLoginTickets();
 console.log(
   await casAuth.login({
     studentId: process.env.HUST_SDK_STUDENT_ID!,
@@ -182,5 +234,10 @@ console.log(
   }),
 );
 
-await casAuth.testAuth();
+// await casAuth.testAuth();
+await casAuth.loginPETYXY({
+  studentId: process.env.HUST_SDK_STUDENT_ID!,
+  password: process.env.HUST_SDK_PASSWORD!,
+});
+await casAuth.testPE();
 cookieManager.watchCookies();

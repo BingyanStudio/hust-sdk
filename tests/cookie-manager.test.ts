@@ -18,6 +18,9 @@ describe('CookieManager', () => {
       expect(cookies[0]).toBeInstanceOf(Cookie);
       expect(cookies[0]!.name).toBe('sessionId');
       expect(cookies[0]!.value).toBe('abc123');
+      expect(cookies[0]!.path).toBe('/');
+      expect(cookies[0]!.httpOnly).toBe(true);
+      expect(cookies[0]!.secure).toBe(true);
     });
 
     test('should parse multiple cookie headers', () => {
@@ -49,7 +52,7 @@ describe('CookieManager', () => {
       const url = 'https://example.com/path';
       const setCookieHeaders = [
         'sessionId=abc123; Path=/',
-        'user=john; Path=/api',
+        'user=john; Path=/path', // 改为 /path 使其能够匹配请求路径
       ];
 
       cookieManager.setCookies(url, setCookieHeaders);
@@ -62,7 +65,7 @@ describe('CookieManager', () => {
     test('should add cookies to existing domain', () => {
       const url = 'https://example.com/path';
       cookieManager.setCookies(url, ['sessionId=abc123; Path=/']);
-      cookieManager.setCookies(url, ['user=john; Path=/api']);
+      cookieManager.setCookies(url, ['user=john; Path=/path']); // 改为 /path 使其能够匹配
 
       const cookieHeader = cookieManager.getCookieHeader(url);
       expect(cookieHeader).toContain('sessionId=abc123');
@@ -100,7 +103,7 @@ describe('CookieManager', () => {
     });
 
     test('should return cookies as header string', () => {
-      const url = 'https://example.com/path';
+      const url = 'https://example.com/api/users';
       cookieManager.setCookies(url, [
         'sessionId=abc123; Path=/',
         'user=john; Path=/api',
@@ -123,6 +126,99 @@ describe('CookieManager', () => {
       expect(cookieManager.getCookieHeader('https://sub.example.com')).toBe(
         'subdomain=true',
       );
+    });
+
+    test('should not include cookies that expired', () => {
+      const url = 'https://example.com/path';
+      cookieManager.setCookies(url, [
+        `sessionId=abc123; Path=/; Expires=${new Date().toUTCString()}`,
+        `user=john; Path=/api; Expires=Thu, 24-Apr-2025 12:14:17 GMT`,
+      ]);
+
+      const expiredCookieHeader = cookieManager.getCookieHeader(url);
+      expect(expiredCookieHeader).toBe('');
+    });
+
+    test('should only return cookies where URL path starts with cookie path', () => {
+      cookieManager.setCookies('https://example.com', [
+        'root=true; Path=/',
+        'api=true; Path=/api',
+        'docs=true; Path=/docs',
+      ]);
+
+      expect(cookieManager.getCookieHeader('https://example.com')).toBe(
+        'root=true',
+      );
+
+      expect(
+        cookieManager.getCookieHeader('https://example.com/api/users'),
+      ).toContain('root=true');
+      expect(
+        cookieManager.getCookieHeader('https://example.com/api/users'),
+      ).toContain('api=true');
+      expect(
+        cookieManager.getCookieHeader('https://example.com/api/users'),
+      ).not.toContain('docs=true');
+
+      expect(
+        cookieManager.getCookieHeader('https://example.com/docs/guide'),
+      ).toContain('root=true');
+      expect(
+        cookieManager.getCookieHeader('https://example.com/docs/guide'),
+      ).toContain('docs=true');
+      expect(
+        cookieManager.getCookieHeader('https://example.com/docs/guide'),
+      ).not.toContain('api=true');
+    });
+
+    test('should handle nested path cookies correctly', () => {
+      cookieManager.setCookies('https://example.com', [
+        'root=true; Path=/',
+        'api=true; Path=/api',
+        'apiV1=true; Path=/api/v1/',
+      ]);
+
+      const rootCookie = cookieManager.getCookieHeader('https://example.com');
+      expect(rootCookie).toBe('root=true');
+
+      const apiCookie = cookieManager.getCookieHeader(
+        'https://example.com/api',
+      );
+      expect(apiCookie).toContain('root=true');
+      expect(apiCookie).toContain('api=true');
+      expect(apiCookie).not.toContain('apiV1=true');
+
+      const apiV1Cookie = cookieManager.getCookieHeader(
+        'https://example.com/api/v1',
+      );
+      expect(apiV1Cookie).toContain('root=true');
+      expect(apiV1Cookie).toContain('api=true');
+      expect(apiV1Cookie).not.toContain('apiV1=true');
+
+      const apiV1UsersCookie = cookieManager.getCookieHeader(
+        'https://example.com/api/v1/users',
+      );
+      expect(apiV1UsersCookie).toContain('root=true');
+      expect(apiV1UsersCookie).toContain('api=true');
+      expect(apiV1UsersCookie).toContain('apiV1=true');
+    });
+
+    test('should handle exact path matching', () => {
+      cookieManager.setCookies('https://example.com', [
+        'exact=true; Path=/exact',
+      ]);
+
+      expect(cookieManager.getCookieHeader('https://example.com/exact')).toBe(
+        'exact=true',
+      );
+
+      expect(
+        cookieManager.getCookieHeader('https://example.com/exact/sub'),
+      ).toBe('exact=true');
+
+      expect(
+        cookieManager.getCookieHeader('https://example.com/exactplus'),
+      ).toBe('');
     });
   });
 });
