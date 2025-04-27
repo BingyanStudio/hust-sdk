@@ -6,7 +6,6 @@ import { rsaEncrypt } from '@/utils/rsa';
 import { useCookie } from '@/utils/use-cookie';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import axios from 'axios';
-import { Cookie, CookieMap } from 'bun';
 
 export default class CASAuth {
   private readonly axios: AxiosInstance;
@@ -135,50 +134,11 @@ export default class CASAuth {
     );
   }
 
-  async testAuth() {
-    // const url = 'https://petyxy.hust.edu.cn/pft/app/resultList?periodId=20242';
-    // const url = 'http://pecg.hust.edu.cn/cggl/appv2/personal_center';
-    // const url = 'http://hard-working.hust.edu.cn';
-    const website = 'https://hubs.hust.edu.cn';
+  async testHUBS() {
     const apiUrl = 'https://hubs.hust.edu.cn/schedule/getCurrentXq';
 
     try {
-      let response = await this.axios.get(website);
-
-      if (
-        response.status === 302 &&
-        response.headers.location.includes('login')
-      ) {
-        // response = await this.axios.get(
-        //   `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('http://petyxy.hust.edu.cn/ggtypt/dologin')}`,
-        // );
-        response = await this.axios.get(
-          `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('https://hubs.hust.edu.cn/cas/login')}`,
-        );
-
-        const options = {
-          headers: {
-            // Accept:
-            //   'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-            // 'Accept-Encoding': 'gzip, deflate, br, zstd',
-            // 'Accept-Language': 'zh-CN,zh;q=0.9',
-            // 'Cache-Control': 'max-age=0',
-            // Priority: 'u=0, i',
-            // 'Upgrade-Insecure-Requests': '1',
-            // 'Sec-Ch-Ua':
-            //   '"Google Chrome";v="135", "Not-A.Brand";v="8", "Chromium";v="135"',
-            // 'Sec-Ch-Ua-Mobile': '?0',
-            // 'Sec-Ch-Ua-Platform': '"macOS"',
-            // 'Sec-Fetch-Dest': 'document',
-            // 'Sec-Fetch-Mode': 'navigate',
-            // 'Sec-Fetch-Site': 'cross-site',
-            // 'Sec-Fetch-User': '?1',
-            // Connection: null,
-          },
-        };
-        response = await followRedirect(response, this.axios, options);
-        response = await this.axios.get(apiUrl);
-      }
+      const response = await this.axios.get(apiUrl);
       console.log('testAuth success with status', response.status);
       console.log('testAuth response', response.data);
     } catch (e) {
@@ -186,7 +146,7 @@ export default class CASAuth {
     }
   }
 
-  async testPE() {
+  async testPETYXY() {
     const url = 'http://petyxy.hust.edu.cn/pft/app/resultList?periodId=20242';
 
     try {
@@ -223,21 +183,54 @@ export default class CASAuth {
       return false;
     }
   }
+
+  async loginHUBS(info: LoginInfo) {
+    const url = 'https://hubs.hust.edu.cn';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      await this.login(info);
+    }
+
+    try {
+      let response = await this.axios.get(url);
+
+      if (
+        response.status === 302 &&
+        response.headers.location.includes('login')
+      ) {
+        response = await this.axios.get(
+          `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('https://hubs.hust.edu.cn/cas/login')}`,
+        );
+
+        response = await followRedirect(response, this.axios);
+
+        return response.status === 200;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 const cookieManager = new CookieManager();
 const casAuth = new CASAuth(cookieManager);
-console.log(
-  await casAuth.login({
-    studentId: process.env.HUST_SDK_STUDENT_ID!,
-    password: process.env.HUST_SDK_PASSWORD!,
-  }),
-);
+// console.log(
+//   await casAuth.login({
+//     studentId: process.env.HUST_SDK_STUDENT_ID!,
+//     password: process.env.HUST_SDK_PASSWORD!,
+//   }),
+// );
 
-// await casAuth.testAuth();
-await casAuth.loginPETYXY({
+// await casAuth.loginPETYXY({
+//   studentId: process.env.HUST_SDK_STUDENT_ID!,
+//   password: process.env.HUST_SDK_PASSWORD!,
+// });
+// await casAuth.testPETYXY();
+
+await casAuth.loginHUBS({
   studentId: process.env.HUST_SDK_STUDENT_ID!,
   password: process.env.HUST_SDK_PASSWORD!,
 });
-await casAuth.testPE();
+await casAuth.testHUBS();
 cookieManager.watchCookies();
