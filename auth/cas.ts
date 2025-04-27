@@ -160,6 +160,57 @@ export default class CASAuth {
     }
   }
 
+  async testONE() {
+    const url = 'https://one.hust.edu.cn/dcp/pim/pim.action';
+
+    try {
+      const response = await this.axios.post(
+        url,
+        {
+          map: {
+            method: 'getAllPimList',
+            params: {
+              javaClass: 'java.util.ArrayList',
+              list: ['', '', '', '', '', ''],
+            },
+            pm: {
+              javaClass: 'com.neusoft.education.edp.client.PageManager',
+              pageSize: 10,
+              pageNo: '1',
+              totalCount: -1,
+              order: null,
+              filters: {
+                javaClass: 'com.neusoft.education.edp.client.QueryFilter',
+                parameters: {
+                  javaClass: 'java.util.HashMap',
+                  map: {},
+                },
+              },
+              pageSumcols: null,
+              pageSums: null,
+              sumcols: null,
+              isNewSum: null,
+              sums: null,
+              resPojoName: '',
+            },
+          },
+          javaClass: 'java.util.HashMap',
+        },
+        {
+          headers: {
+            Clienttype: 'json',
+            Render: 'json',
+          },
+        },
+      );
+      console.log('testONE success with status', response.status);
+      console.log('testONE response', response.data);
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async loginPETYXY(info: LoginInfo) {
     const url = 'https://petyxy.hust.edu.cn/pft/app/resultList';
     const isLogin = await this.checkLoginStatus();
@@ -211,6 +262,34 @@ export default class CASAuth {
       return false;
     }
   }
+
+  async loginONE(info: LoginInfo) {
+    const url = 'https://one.hust.edu.cn/dcp/';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      await this.login(info);
+    }
+
+    try {
+      let response = await this.axios.get(url);
+
+      if (
+        response.status === 302 &&
+        response.headers.location.includes('login')
+      ) {
+        response = await this.axios.get(
+          `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('https://one.hust.edu.cn/dcp/index.jsp')}`,
+        );
+
+        response = await followRedirect(response, this.axios);
+
+        return response.status === 200;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 const cookieManager = new CookieManager();
@@ -228,9 +307,15 @@ const casAuth = new CASAuth(cookieManager);
 // });
 // await casAuth.testPETYXY();
 
-await casAuth.loginHUBS({
+// await casAuth.loginHUBS({
+//   studentId: process.env.HUST_SDK_STUDENT_ID!,
+//   password: process.env.HUST_SDK_PASSWORD!,
+// });
+// await casAuth.testHUBS();
+
+await casAuth.loginONE({
   studentId: process.env.HUST_SDK_STUDENT_ID!,
   password: process.env.HUST_SDK_PASSWORD!,
 });
-await casAuth.testHUBS();
+await casAuth.testONE();
 cookieManager.watchCookies();
