@@ -48,3 +48,13 @@ export async function followRedirect(
 
   return finalResponse;
 }
+
+export function isAuthError(error: any): boolean {
+  if (error && error.response) {
+    return (
+      error.response === 302 &&
+      error.response.headers.location.includes('login')
+    );
+  }
+  return false;
+}

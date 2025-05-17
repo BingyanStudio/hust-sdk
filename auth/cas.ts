@@ -77,7 +77,7 @@ export default class CASAuth {
    * @param {LoginInfo} info 登录信息，学号和密码
    * @returns {boolean} 登录成功返回 true，否则返回 false
    */
-  async login(info: LoginInfo) {
+  async login(info: LoginInfo): Promise<boolean> {
     const tickets = await this.getLoginTickets();
 
     if (!tickets) {
@@ -120,7 +120,7 @@ export default class CASAuth {
       },
     );
 
-    console.log('loginResponse', loginResponse.status);
+    // console.log('loginResponse', loginResponse.status);
     // if (loginResponse.status === 302 && loginResponse.headers.location) {
     //   console.log(
     //     'loginResponse.headers.location',
@@ -211,12 +211,12 @@ export default class CASAuth {
     }
   }
 
-  async loginPETYXY(info: LoginInfo) {
+  async loginPETYXY() {
     const url = 'https://petyxy.hust.edu.cn/pft/app/resultList';
     const isLogin = await this.checkLoginStatus();
 
     if (!isLogin) {
-      await this.login(info);
+      return false;
     }
 
     try {
@@ -235,12 +235,12 @@ export default class CASAuth {
     }
   }
 
-  async loginHUBS(info: LoginInfo) {
+  async loginHUBS() {
     const url = 'https://hubs.hust.edu.cn';
     const isLogin = await this.checkLoginStatus();
 
     if (!isLogin) {
-      await this.login(info);
+      return false;
     }
 
     try {
@@ -255,20 +255,19 @@ export default class CASAuth {
         );
 
         response = await followRedirect(response, this.axios);
-
-        return response.status === 200;
       }
+      return response.status === 200;
     } catch (e) {
       return false;
     }
   }
 
-  async loginONE(info: LoginInfo) {
+  async loginONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
     const isLogin = await this.checkLoginStatus();
 
     if (!isLogin) {
-      await this.login(info);
+      return false;
     }
 
     try {
@@ -283,17 +282,16 @@ export default class CASAuth {
         );
 
         response = await followRedirect(response, this.axios);
-
-        return response.status === 200;
       }
+      return response.status === 200;
     } catch (e) {
       return false;
     }
   }
 }
 
-const cookieManager = new CookieManager();
-const casAuth = new CASAuth(cookieManager);
+// const cookieManager = new CookieManager();
+// const casAuth = new CASAuth(cookieManager);
 // console.log(
 //   await casAuth.login({
 //     studentId: process.env.HUST_SDK_STUDENT_ID!,
@@ -313,9 +311,9 @@ const casAuth = new CASAuth(cookieManager);
 // });
 // await casAuth.testHUBS();
 
-await casAuth.loginONE({
-  studentId: process.env.HUST_SDK_STUDENT_ID!,
-  password: process.env.HUST_SDK_PASSWORD!,
-});
-await casAuth.testONE();
-cookieManager.watchCookies();
+// await casAuth.loginONE({
+//   studentId: process.env.HUST_SDK_STUDENT_ID!,
+//   password: process.env.HUST_SDK_PASSWORD!,
+// });
+// await casAuth.testONE();
+// cookieManager.watchCookies();
