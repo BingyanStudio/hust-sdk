@@ -19,3 +19,7 @@ To run:
 ```bash
 bun run index.ts
 ```
+
+## Contribution
+
+Welcome contributions to this project! Please read our [Contribution Guidelines](./docs/contribution.md) for detailed procedures and specifications before contributing code.
