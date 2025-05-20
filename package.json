@@ -6,6 +6,8 @@
     "test": "bun test"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
     "@types/bun": "latest",
     "@types/node": "^22.13.14",
     "prettier": "3.5.3"
