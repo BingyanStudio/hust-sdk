@@ -1,4 +1,5 @@
 import type { LoginInfo } from './auth';
+import type { PhoneCodeCallback } from '@/auth/cas';
 
 export enum Client {
   news = 'news',
@@ -9,4 +10,5 @@ export interface HUSTConfig {
   maxLoginRetries?: number; // 最大登录重试次数
   loginCheckInterval?: number; // 登录检查间隔
   clients?: Client[]; // 需要登录的客户端，为空则登录所有客户端
+  phoneCodeCallback?: PhoneCodeCallback; // 手机验证码回调
 }
