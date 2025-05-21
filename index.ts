@@ -1,6 +1,6 @@
 import CookieManager from '@/auth/cookie-manager';
-import CASAuth, { type PhoneCodeCallback } from '@/auth/cas';
-import type { LoginInfo } from '@/types/auth';
+import CASAuth from '@/auth/cas';
+import type { LoginInfo, PhoneCodeCallback } from '@/types/auth';
 import NewsClient from '@/clients/news-client';
 import { Client, type HUSTConfig } from '@/types/hust';
 import { isAuthError } from './utils/request';
@@ -14,7 +14,7 @@ export default class HUST {
   private loginCheckTimer: NodeJS.Timeout | null = null;
   private initialLoginPromise: Promise<boolean> | null = null;
   private isInitialLogging: boolean = false;
-  private phoneCodeCallback?: PhoneCodeCallback;
+  private phoneCodeCallback: PhoneCodeCallback = getPhoneCodeFromConsole;
 
   // 配置项
   private maxLoginRetries: number = 10;
@@ -41,8 +41,9 @@ export default class HUST {
       this.clients = config.clients;
     }
 
-    // Set default phone code callback to console input if not provided
-    this.phoneCodeCallback = config?.phoneCodeCallback || getPhoneCodeFromConsole;
+    if (config?.phoneCodeCallback) {
+      this.phoneCodeCallback = config.phoneCodeCallback;
+    }
 
     if (config?.info) {
       this.loginInfo = { ...config.info };

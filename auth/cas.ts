@@ -1,14 +1,11 @@
 import CookieManager from '@/auth/cookie-manager';
-import type { LoginInfo, LoginTickets, RSAResponse } from '@/types/auth';
+import type { LoginInfo, LoginTickets, PhoneCodeCallback, RSAResponse } from '@/types/auth';
 import { recognizeGifCaptcha } from '@/utils/dynamic-code';
 import { followRedirect } from '@/utils/request';
 import { rsaEncrypt } from '@/utils/rsa';
 import { useCookie } from '@/utils/use-cookie';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import axios from 'axios';
-
-// Phone verification code callback type
-export type PhoneCodeCallback = () => Promise<string>;
 
 export default class CASAuth {
   private readonly axios: AxiosInstance;
@@ -162,13 +159,17 @@ export default class CASAuth {
       this.isPhoneCodeRequired(loginResponse.data)
     ) {
       if (!phoneCodeCallback) {
-        console.error('Phone verification code is required but no callback was provided.');
-        console.error('Please provide a phoneCodeCallback in the HUST constructor config.');
+        console.error(
+          'Phone verification code is required but no callback was provided.',
+        );
+        console.error(
+          'Please provide a phoneCodeCallback in the HUST constructor config.',
+        );
         return false;
       }
 
       console.log('Phone verification code required for login.');
-      
+
       // 解析新的ticket信息
       const newTickets = this.parseTicketsFromHTML(loginResponse.data);
       if (!newTickets) {
@@ -178,7 +179,7 @@ export default class CASAuth {
 
       // 获取用户输入的验证码
       const phoneCode = await phoneCodeCallback();
-      
+
       if (!phoneCode || phoneCode.trim().length === 0) {
         console.error('Empty phone verification code provided');
         return false;

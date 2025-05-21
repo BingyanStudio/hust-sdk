@@ -1,5 +1,4 @@
-import type { LoginInfo } from './auth';
-import type { PhoneCodeCallback } from '@/auth/cas';
+import type { LoginInfo, PhoneCodeCallback } from './auth';
 
 export enum Client {
   news = 'news',
