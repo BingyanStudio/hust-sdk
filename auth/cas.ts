@@ -1,5 +1,5 @@
 import CookieManager from '@/auth/cookie-manager';
-import type { LoginInfo, LoginTickets, RSAResponse } from '@/types/auth';
+import type { LoginInfo, LoginTickets, PhoneCodeCallback, RSAResponse } from '@/types/auth';
 import { recognizeGifCaptcha } from '@/utils/dynamic-code';
 import { followRedirect } from '@/utils/request';
 import { rsaEncrypt } from '@/utils/rsa';
@@ -44,15 +44,12 @@ export default class CASAuth {
     }
   }
 
-  async getLoginTickets(): Promise<LoginTickets | null> {
-    const isLogin = await this.checkLoginStatus();
-    if (isLogin) {
-      return null;
-    }
-
-    const response = await this.axios.get(`${CASAuth.CAS_URL}/login`);
-    const html = response.data;
-
+  /**
+   * 从登录响应中解析新的票据信息
+   * @param {string} html 登录响应的HTML内容
+   * @returns {LoginTickets | null} 解析出的票据信息，如果解析失败返回 null
+   */
+  private parseTicketsFromHTML(html: string): LoginTickets | null {
     const ltMatch = html.match(
       /<input type="hidden" id="lt" name="lt" value="(.*?)" \/>/,
     );
@@ -60,7 +57,7 @@ export default class CASAuth {
       /<input type="hidden" name="execution" value="(.*?)" \/>/,
     );
 
-    if (!ltMatch || !execMatch) {
+    if (!ltMatch?.[1] || !execMatch?.[1]) {
       return null;
     }
 
@@ -70,14 +67,43 @@ export default class CASAuth {
     };
   }
 
+  async getLoginTickets(): Promise<LoginTickets | null> {
+    const isLogin = await this.checkLoginStatus();
+    if (isLogin) {
+      return null;
+    }
+
+    const response = await this.axios.get(`${CASAuth.CAS_URL}/login`);
+    const html = response.data;
+
+    const tickets = this.parseTicketsFromHTML(html);
+    return tickets;
+  }
+
+  /**
+   * 判断是否需要手机验证码
+   * @param {string} html 登录响应的HTML内容
+   * @returns {boolean} 需要手机验证码返回 true，否则返回 false
+   */
+  private isPhoneCodeRequired(html: string): boolean {
+    return (
+      html.includes('id="phoneCode"') &&
+      html.includes('class="login_box_input dtm-pic"')
+    );
+  }
+
   /**
    * 统一认证登录
    *
    * @async
    * @param {LoginInfo} info 登录信息，学号和密码
-   * @returns {boolean} 登录成功返回 true，否则返回 false
+   * @param {PhoneCodeCallback} phoneCodeCallback 获取手机验证码的回调函数，当需要手机验证码时会调用
+   * @returns {Promise<boolean>} 登录成功返回 true，否则返回 false
    */
-  async login(info: LoginInfo): Promise<boolean> {
+  async login(
+    info: LoginInfo,
+    phoneCodeCallback?: PhoneCodeCallback,
+  ): Promise<boolean> {
     const tickets = await this.getLoginTickets();
 
     if (!tickets) {
@@ -104,12 +130,11 @@ export default class CASAuth {
     formData.append('ul', encryptedStudentId);
     formData.append('pl', encryptedPassword);
     formData.append('code', code || '');
-    formData.append('phoneCode', 'null');
+    formData.append('phoneCode', 'null'); // 初始不提供手机验证码
     formData.append('lt', tickets.lt);
     formData.append('execution', tickets.execution);
     formData.append('_eventId', 'submit');
 
-    // console.log('formData', formData.toString());
     const loginResponse = await this.axios.post(
       `${CASAuth.CAS_URL}/login`,
       formData,
@@ -120,18 +145,75 @@ export default class CASAuth {
       },
     );
 
-    // console.log('loginResponse', loginResponse.status);
-    // if (loginResponse.status === 302 && loginResponse.headers.location) {
-    //   console.log(
-    //     'loginResponse.headers.location',
-    //     loginResponse.headers.location,
-    //   );
-    // }
-
-    return (
+    // 检查是否登录成功
+    if (
       loginResponse.status === 302 &&
       loginResponse.headers.location.includes(CASAuth.CAS_REDIRECT_DOMAIN)
-    );
+    ) {
+      return true;
+    }
+
+    // 检查是否需要手机验证码
+    if (
+      loginResponse.status === 200 &&
+      this.isPhoneCodeRequired(loginResponse.data)
+    ) {
+      if (!phoneCodeCallback) {
+        console.error(
+          'Phone verification code is required but no callback was provided.',
+        );
+        console.error(
+          'Please provide a phoneCodeCallback in the HUST constructor config.',
+        );
+        return false;
+      }
+
+      console.log('Phone verification code required for login.');
+
+      // 解析新的ticket信息
+      const newTickets = this.parseTicketsFromHTML(loginResponse.data);
+      if (!newTickets) {
+        console.error('Failed to parse new tickets from phone code page');
+        return false;
+      }
+
+      // 获取用户输入的验证码
+      const phoneCode = await phoneCodeCallback();
+
+      if (!phoneCode || phoneCode.trim().length === 0) {
+        console.error('Empty phone verification code provided');
+        return false;
+      }
+
+      // 创建带有手机验证码的表单数据
+      const phoneCodeFormData = new URLSearchParams();
+      phoneCodeFormData.append('rsa', 'null');
+      phoneCodeFormData.append('ul', encryptedStudentId);
+      phoneCodeFormData.append('pl', encryptedPassword);
+      phoneCodeFormData.append('code', code || '');
+      phoneCodeFormData.append('phoneCode', phoneCode);
+      phoneCodeFormData.append('lt', newTickets.lt);
+      phoneCodeFormData.append('execution', newTickets.execution);
+      phoneCodeFormData.append('_eventId', 'submit');
+
+      // 重新提交登录请求，这次带上验证码
+      const phoneCodeResponse = await this.axios.post(
+        `${CASAuth.CAS_URL}/login`,
+        phoneCodeFormData,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        },
+      );
+
+      return (
+        phoneCodeResponse.status === 302 &&
+        phoneCodeResponse.headers.location.includes(CASAuth.CAS_REDIRECT_DOMAIN)
+      );
+    }
+
+    return false;
   }
 
   async testHUBS() {

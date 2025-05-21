@@ -1,9 +1,10 @@
 import CookieManager from '@/auth/cookie-manager';
 import CASAuth from '@/auth/cas';
-import type { LoginInfo } from '@/types/auth';
+import type { LoginInfo, PhoneCodeCallback } from '@/types/auth';
 import NewsClient from '@/clients/news-client';
 import { Client, type HUSTConfig } from '@/types/hust';
 import { isAuthError } from './utils/request';
+import { getPhoneCodeFromConsole } from './utils/console-input';
 
 export default class HUST {
   private readonly cookieManager: CookieManager;
@@ -13,6 +14,7 @@ export default class HUST {
   private loginCheckTimer: NodeJS.Timeout | null = null;
   private initialLoginPromise: Promise<boolean> | null = null;
   private isInitialLogging: boolean = false;
+  private phoneCodeCallback: PhoneCodeCallback = getPhoneCodeFromConsole;
 
   // 配置项
   private maxLoginRetries: number = 10;
@@ -39,11 +41,22 @@ export default class HUST {
       this.clients = config.clients;
     }
 
+    if (config?.phoneCodeCallback) {
+      this.phoneCodeCallback = config.phoneCodeCallback;
+    }
+
     if (config?.info) {
       this.loginInfo = { ...config.info };
       // 开始初始登录
       this.initialLogin();
     }
+  }
+
+  /**
+   * 设置手机验证码回调函数
+   */
+  setPhoneCodeCallback(callback: PhoneCodeCallback) {
+    this.phoneCodeCallback = callback;
   }
 
   /**
@@ -73,7 +86,7 @@ export default class HUST {
 
       while (loginRetryCount < maxRetries && !loginSuccess) {
         try {
-          loginSuccess = await this.auth.login(info);
+          loginSuccess = await this.auth.login(info, this.phoneCodeCallback);
 
           if (loginSuccess) {
             let loginClients = this.clients;

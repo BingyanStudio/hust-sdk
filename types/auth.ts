@@ -15,3 +15,5 @@ export interface LoginTickets {
 export interface RSAResponse {
   publicKey: string;
 }
+
+export type PhoneCodeCallback = () => Promise<string>;
