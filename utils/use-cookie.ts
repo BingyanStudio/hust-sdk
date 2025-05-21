@@ -11,22 +11,22 @@ export const useCookie = (
   cookieManager: CookieManager,
 ) => {
   // 响应拦截，存入 set-cookie
-  axios.interceptors.response.use((response) => {
+  axios.interceptors.response.use(async (response) => {
     console.log('Response URL:', response.config.url);
     console.log('Response Status:', response.status);
     const setCookieHeaders = response.headers['set-cookie'];
     const url = response.config.url;
     if (setCookieHeaders && url) {
-      cookieManager.setCookies(url, setCookieHeaders);
+      await cookieManager.setCookies(url, setCookieHeaders);
     }
     return response;
   });
 
   // 请求拦截，添加 cookie
-  axios.interceptors.request.use((config) => {
+  axios.interceptors.request.use(async (config) => {
     const url = config.url;
     if (url) {
-      const cookieHeader = cookieManager.getCookieHeader(url);
+      const cookieHeader = await cookieManager.getCookieHeader(url);
       if (cookieHeader) {
         config.headers['Cookie'] = cookieHeader;
       }
