@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useCookie } from '@/utils/use-cookie';
 import type HUST from '..';
 import { getPhysicsCourseGrades, getPhysicsCourseSchedule as getPhysicsCourseSchedule } from './course/physics';
+import { getNormalCourseSchedule } from './course/course';
 
 export default class CourseClient {
   protected readonly axios: AxiosInstance;
@@ -31,6 +32,12 @@ export default class CourseClient {
   async getPhysicsCourseGrades() {
     return await this.hust.handleRequest(() =>
       getPhysicsCourseGrades(this.axios),
+    );
+  }
+
+  async getNormalCourseSchedule(semesterId: string) {
+    return await this.hust.handleRequest(() =>
+      getNormalCourseSchedule(this.axios, semesterId),
     );
   }
 }

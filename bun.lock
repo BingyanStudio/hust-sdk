@@ -5,6 +5,7 @@
       "name": "hust-sdk",
       "dependencies": {
         "axios": "^1.8.4",
+        "dayjs": "^1.11.13",
         "gif-frames": "^1.0.1",
         "sharp": "^0.33.5",
         "tesseract.js": "^6.0.0",
@@ -182,6 +183,8 @@
     "dashdash": ["dashdash@1.14.1", "", { "dependencies": { "assert-plus": "^1.0.0" } }, "sha512-jRFi8UDGo6j+odZiEpjazZaWqEal3w/basFjQHQEwVtZJGDpxbH1MeYluwCS8Xq5wmLJooDlMgvVarmWfGM44g=="],
 
     "data-uri-to-buffer": ["data-uri-to-buffer@0.0.3", "", {}, "sha512-Cp+jOa8QJef5nXS5hU7M1DWzXPEIoVR3kbV0dQuVGwROZg8bGf1DcCnkmajBTnvghTtSNMUdRrPjgaT6ZQucbw=="],
+
+    "dayjs": ["dayjs@1.11.13", "https://mirrors.huaweicloud.com/repository/npm/dayjs/-/dayjs-1.11.13.tgz", {}, "sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg=="],
 
     "delayed-stream": ["delayed-stream@1.0.0", "", {}, "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ=="],
 

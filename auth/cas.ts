@@ -262,6 +262,24 @@ export default class CASAuth {
     }
   }
 
+  async loginHUBM() {
+    const url = 'http://hub.m.hust.edu.cn/hub_weix';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+      response = await followRedirect(response, this.axios);
+      
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async loginONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
 

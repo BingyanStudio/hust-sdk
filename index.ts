@@ -163,7 +163,13 @@ export default class HUST {
       case Client.news:
         return await this.auth.loginONE();
       case Client.course:
-        return await this.auth.loginPhysics();
+        return (
+          await Promise.all([
+            this.auth.loginPhysics(),
+            this.auth.loginHUBM(),
+            this.auth.loginHUBS(),
+          ])
+        ).every((item) => item);
       default:
         throw new Error(`Client ${client} not supported`);
     }
@@ -311,7 +317,7 @@ console.log('Initializing HUST SDK...');
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 
-const res2 = await hust.course.getPhysicsCourseGrades();
+const res2 = await hust.course.getNormalCourseSchedule('20242');
 console.log('Course Schedule:', res2);
 
 console.log(`initialized after ${new Date().getTime() - now.getTime()}ms`);
