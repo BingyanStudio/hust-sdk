@@ -2,7 +2,7 @@ import type { AxiosInstance } from 'axios';
 import axios from 'axios';
 import { useCookie } from '@/utils/use-cookie';
 import type HUST from '..';
-import { getCourseSchedule as getPhysicsCourseSchedule } from './course/physics';
+import { getPhysicsCourseGrades, getPhysicsCourseSchedule as getPhysicsCourseSchedule } from './course/physics';
 
 export default class CourseClient {
   protected readonly axios: AxiosInstance;
@@ -25,6 +25,12 @@ export default class CourseClient {
   async getPhysicsCourseSchedule() {
     return await this.hust.handleRequest(() =>
       getPhysicsCourseSchedule(this.axios),
+    );
+  }
+
+  async getPhysicsCourseGrades() {
+    return await this.hust.handleRequest(() =>
+      getPhysicsCourseGrades(this.axios),
     );
   }
 }

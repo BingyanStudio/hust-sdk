@@ -311,7 +311,7 @@ console.log('Initializing HUST SDK...');
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 
-const res2 = await hust.course.getPhysicsCourseSchedule();
+const res2 = await hust.course.getPhysicsCourseGrades();
 console.log('Course Schedule:', res2);
 
 console.log(`initialized after ${new Date().getTime() - now.getTime()}ms`);
