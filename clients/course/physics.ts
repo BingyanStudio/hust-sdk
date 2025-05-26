@@ -7,6 +7,32 @@ import type {
 import type { AxiosInstance } from 'axios';
 import dayjs from 'dayjs';
 
+function getStartLessonFromSessionName(sessionName: string): number {
+  switch (sessionName) {
+    case '上午':
+      return 1;
+    case '下午':
+      return 5;
+    case '晚上':
+      return 9;
+    default:
+      return -1;
+  }
+}
+
+function getEndLessonFromSessionName(sessionName: string): number {
+  switch (sessionName) {
+    case '上午':
+      return 4;
+    case '下午':
+      return 8;
+    case '晚上':
+      return 12;
+    default:
+      return -1;
+  }
+}
+
 export async function getPhysicsCourseSchedule(
   axios: AxiosInstance,
 ): Promise<PhysicsCourseSchedule[]> {
@@ -30,8 +56,8 @@ export async function getPhysicsCourseSchedule(
           courseName: item.course_name,
           teacherName: item.user_name,
           roomName: item.room_name,
-          startLesson: item.room_test_num,
-          endLesson: item.room_test_num + 1,
+          startLesson: getStartLessonFromSessionName(item.session_name),
+          endLesson: getEndLessonFromSessionName(item.session_name),
           startTime: dayjs(item.start_time),
           endTime: dayjs(item.start_time).add(3, 'hour'),
           weekDay: item.week_day,
