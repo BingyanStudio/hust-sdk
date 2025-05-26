@@ -283,6 +283,23 @@ export default class CASAuth {
       return false;
     }
   }
+  async loginPhysics() {
+    const url = 'http://empxk.hust.edu.cn/';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+      response = await followRedirect(response, this.axios);
+
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
 
   // 检查对应网站是否登录
   async checkPETYXY() {
@@ -309,6 +326,17 @@ export default class CASAuth {
 
   async checkONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkPhysics() {
+    const url = 'http://empxk.hust.edu.cn/';
 
     try {
       const response = await this.axios.get(url);
