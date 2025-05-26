@@ -4,7 +4,6 @@ import type {
   PhysicsCourseSchedule,
   PhysicsCourseScheduleResponse,
 } from '@/types/clients/course/physics';
-import { renameKeys } from '@/utils/object-utils';
 import type { AxiosInstance } from 'axios';
 import dayjs from 'dayjs';
 
@@ -63,16 +62,20 @@ export async function getPhysicsCourseGrades(
       throw new Error(`Error fetching course grades: ${data.msg}`);
     }
     return data.data.map(
-      renameKeys({
-        course_name: 'courseName',
-        experiment_score: 'experimentScore',
-        room_name: 'roomName',
-        sign_time: 'signTime',
-        user_name: 'userName',
-        faculty_id: 'facultyId',
-        teacher_id: 'teacherId',
-        report_score: 'reportScore',
-      } as const),
+      (item) => ({
+        cardNumber: item.cardNumber,
+        courseName: item.course_name,
+        experimentScore: item.experiment_score,
+        id: item.id,
+        roomName: item.room_name,
+        signTime: item.sign_time,
+        userName: item.user_name,
+        facultyId: item.faculty_id,
+        teacherId: item.teacher_id,
+        reportScore: item.report_score,
+        status: item.status,
+        studentId: item.studentId,
+      }),
     ) as PhysicsCourseGrade[];
   } catch (e) {
     console.error('CourseClient.physics error on fetching grades', e);
