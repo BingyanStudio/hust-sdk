@@ -1,4 +1,6 @@
 import type {
+  NormalCourseGrade,
+  NormalCourseGradesResponse,
   NormalCourseSchedule,
   NormalCourseScheduleResponse,
 } from '@/types/clients/course/course';
@@ -154,6 +156,47 @@ export async function getNormalCourseSchedule(
     return results;
   } catch (e) {
     console.error('CourseClient.getNormalCourseSchedule error on fetching', e);
+    throw e;
+  }
+}
+
+export async function getNormalCourseGrades(
+  axios: AxiosInstance,
+  semesterId: string,
+  pageNumber: number = 1,
+  pageSize: number = 20,
+): Promise<NormalCourseGrade[]> {
+  const params = new URLSearchParams();
+  params.append('XQH', semesterId);
+  params.append('pageNum', String(pageNumber));
+  params.append('pageSize', String(pageSize));
+  const url = `https://hubs.hust.edu.cn/student/gradeSelect/queryResults?${params.toString()}`;
+
+  try {
+    const response = await axios.get(url);
+    if (response.status !== 200) {
+      throw new Error(
+        `Error fetching course grades for semester ${semesterId}.`,
+      );
+    }
+    const data: NormalCourseGradesResponse = response.data;
+
+    return data.list.map((item) => ({
+      className: item.BJMC,
+      scoreType: item.CJLX,
+      courseId: item.KCBH,
+      courseName: item.KCMC,
+      studentId: item.XH,
+      score: item.XSCJ,
+      hundredScore: item.BFCJ,
+      evaluationStatus: item.SFPJ,
+      studentName: item.XM,
+      semesterId: item.XQH,
+      totalCredits: item.ZXF,
+      schoolName: item.YXSMC,
+    }));
+  } catch (e) {
+    console.error('CourseClient.getNormalCourseGrades error on fetching', e);
     throw e;
   }
 }

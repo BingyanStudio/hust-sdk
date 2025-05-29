@@ -140,3 +140,178 @@ export type NormalCourseSchedule = CourseSchedule & {
    */
   semesterId: string;
 }
+
+export type NormalCourseGradesResponseItem = {
+    /**
+     * 百分成绩
+     */
+    BFCJ: number;
+    /**
+     * 班级名称
+     */
+    BJMC: string;
+    /**
+     * 成绩类型
+     */
+    CJLX: string;
+    /**
+     * ？
+     */
+    DFFSDM: string;
+    /**
+     * ？
+     */
+    HDCJFS: string;
+    /**
+     * 课程编号
+     */
+    KCBH: string;
+    /**
+     * 课程名称
+     */
+    KCMC: string;
+    /**
+     * ？
+     */
+    KGZT: string;
+    /**
+     * ？
+     */
+    KSQKZCM: string;
+    /**
+     * 行编号
+     */
+    PAGEHELPER_ROW_ID: number;
+    /**
+     * 行编号
+     */
+    RANK: number;
+    /**
+     * 身份 ID？
+     */
+    SFID: string;
+    /**
+     * ？
+     */
+    SFJRJQ: string;
+    /**
+     * 是否评价
+     */
+    SFPJ: string;
+    /**
+     * 学号
+     */
+    XH: string;
+    /**
+     * ？
+     */
+    XKXZDM: string;
+    /**
+     * 姓名
+     */
+    XM: string;
+    /**
+     * 学期
+     */
+    XQ: string;
+    /**
+     * 学期号
+     */
+    XQH: string;
+    /**
+     * 学生成绩
+     */
+    XSCJ: string;
+    /**
+     * 院系名称
+     */
+    YXSMC: string;
+    /**
+     * 总学分
+     */
+    ZXF: number;
+}
+
+export type NormalCourseGradesResponse = {
+    /**
+     * 结束行号
+     */
+    endRow: number;
+    /**
+     * 是否有下一页
+     */
+    hasNextPage: boolean;
+    /**
+     * 是否有上一页
+     */
+    hasPreviousPage: boolean;
+    /**
+     * 是否为第一页
+     */
+    isFirstPage: boolean;
+    /**
+     * 是否为最后一页
+     */
+    isLastPage: boolean;
+    list: NormalCourseGradesResponseItem[];
+    /**
+     * 第一页页码
+     */
+    navigateFirstPage: number;
+    /**
+     * 最后一页页码
+     */
+    navigateLastPage: number;
+    /**
+     * 可导航页码列表
+     */
+    navigatepageNums: number[];
+    navigatePages: number;
+    /**
+     * 下一页页码
+     */
+    nextPage: number;
+    /**
+     * 页码
+     */
+    pageNum: number;
+    /**
+     * 总页数
+     */
+    pages: number;
+    /**
+     * 单页数据量
+     */
+    pageSize: number;
+    /**
+     * 上一页页码
+     */
+    prePage: number;
+    /**
+     * 单页数据量
+     */
+    size: number;
+    /**
+     * 起始行号
+     */
+    startRow: number;
+    /**
+     * 科目门数
+     */
+    total: number;
+}
+
+export type NormalCourseGrade = {
+  className: string;
+  scoreType: string;
+  courseId: string;
+  courseName: string;
+  studentId: string;
+  score: string;
+  hundredScore: number;
+  evaluationStatus: string;
+  studentName: string;
+  semesterId: string;
+  totalCredits: number;
+  schoolName: string;
+}
