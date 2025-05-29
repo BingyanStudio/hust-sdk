@@ -280,6 +280,33 @@ export default class CASAuth {
     }
   }
 
+  async loginMHUB() {
+    const url = 'http://mhub.hust.edu.cn/';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+
+      if (
+        response.status === 302 &&
+        response.headers.location.includes('login')
+      ) {
+        response = await this.axios.get(
+          `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('https://mhub.hust.edu.cn/cas/login')}`,
+        );
+
+        response = await followRedirect(response, this.axios);
+      }
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async loginONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
 

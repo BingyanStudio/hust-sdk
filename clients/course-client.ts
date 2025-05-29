@@ -7,9 +7,11 @@ import {
   getPhysicsCourseSchedule as getPhysicsCourseSchedule,
 } from './course/physics';
 import {
+  getExaminationArrangements,
   getNormalCourseGrades,
   getNormalCourseSchedule,
 } from './course/course';
+import { ExaminationType } from '@/types/clients/course/course';
 
 export default class CourseClient {
   protected readonly axios: AxiosInstance;
@@ -69,6 +71,35 @@ export default class CourseClient {
     }
     return await this.hust.handleRequest(() =>
       getNormalCourseGrades(this.axios, semesterId, pageNumber, pageSize),
+    );
+  }
+
+  async getExaminationArrangements(
+    semesterId: string,
+    {
+      pageIndex,
+      pageSize,
+      keyword,
+      type,
+    }: {
+      pageIndex: number;
+      pageSize: number;
+      keyword: string;
+      type: ExaminationType;
+    } = {
+      pageIndex: 1,
+      pageSize: 100,
+      keyword: '',
+      type: ExaminationType.NORMAL,
+    },
+  ) {
+    return await this.hust.handleRequest(() =>
+      getExaminationArrangements(this.axios, semesterId, {
+        pageIndex,
+        pageSize,
+        keyword,
+        type,
+      }),
     );
   }
 }

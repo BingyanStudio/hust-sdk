@@ -1,8 +1,11 @@
-import type {
-  NormalCourseGrade,
-  NormalCourseGradesResponse,
-  NormalCourseSchedule,
-  NormalCourseScheduleResponse,
+import {
+  ExaminationType,
+  type ExaminationArrangement,
+  type ExaminationArrangementsResponse,
+  type NormalCourseGrade,
+  type NormalCourseGradesResponse,
+  type NormalCourseSchedule,
+  type NormalCourseScheduleResponse,
 } from '@/types/clients/course/course';
 import type { AxiosInstance } from 'axios';
 import type { Dayjs } from 'dayjs';
@@ -197,6 +200,70 @@ export async function getNormalCourseGrades(
     }));
   } catch (e) {
     console.error('CourseClient.getNormalCourseGrades error on fetching', e);
+    throw e;
+  }
+}
+
+export async function getExaminationArrangements(
+  axios: AxiosInstance,
+  semesterId: string,
+  {
+    pageIndex,
+    pageSize,
+    keyword,
+    type,
+  }: {
+    pageIndex: number;
+    pageSize: number;
+    keyword: string | null;
+    type: ExaminationType;
+  } = {
+    pageIndex: 1,
+    pageSize: 100,
+    keyword: null,
+    type: ExaminationType.NORMAL,
+  },
+): Promise<ExaminationArrangement[]> {
+  const url = 'https://mhub.hust.edu.cn/ksapController/getStuKsxx';
+
+  try {
+    const response = await axios.post(url, {
+      xqh: semesterId,
+      pageIndex: pageIndex,
+      pageSize: pageSize,
+      kcmc: keyword,
+      kslx: type,
+    });
+    if (response.status !== 200) {
+      throw new Error(
+        `Error fetching examination arrangements for semester ${semesterId}.`,
+      );
+    }
+    const data: ExaminationArrangementsResponse = response.data;
+
+    console.log(data);
+
+    return data.list.map((item) => ({
+      scheduleId: item.SCHEDULEID,
+      departmentName: item.DWMC,
+      departmentId: item.PKDW,
+      classroomName: item.JSMC,
+      courseId: item.KCBH,
+      courseName: item.KCMC,
+      examType: item.KSLX === '0' ? ExaminationType.RETAKE : ExaminationType.NORMAL,
+      examDate: item.KSRQ,
+      classId: item.KTBH,
+      studentId: item.SFID,
+      studentName: item.XM,
+      semesterId: item.XQH,
+      semesterName: item.XQMC,
+      lastTeachingWeek: item.ZHSKZC,
+    }));
+  } catch (e) {
+    console.error(
+      'CourseClient.getExaminationArrangements error on fetching',
+      e,
+    );
     throw e;
   }
 }

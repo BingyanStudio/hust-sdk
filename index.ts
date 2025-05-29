@@ -168,6 +168,7 @@ export default class HUST {
             this.auth.loginPhysics(),
             this.auth.loginHUBM(),
             this.auth.loginHUBS(),
+            this.auth.loginMHUB(),
           ])
         ).every((item) => item);
       default:
@@ -317,7 +318,7 @@ console.log('Initializing HUST SDK...');
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 
-const res2 = await hust.course.getNormalCourseGrades('20241', { all: true });
-console.log('Course Grades:', res2);
+const res2 = await hust.course.getExaminationArrangements('20241');
+console.log('Examination Arrangements:', res2);
 
 console.log(`initialized after ${new Date().getTime() - now.getTime()}ms`);
