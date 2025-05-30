@@ -5,6 +5,7 @@ import NewsClient from '@/clients/news-client';
 import { Client, type HUSTConfig } from '@/types/hust';
 import { isAuthError } from './utils/request';
 import { getPhoneCodeFromConsole } from './utils/console-input';
+import { AxiosError } from 'axios';
 
 export default class HUST {
   private readonly cookieManager: CookieManager;
@@ -18,8 +19,8 @@ export default class HUST {
 
   // 配置项
   private maxLoginRetries: number = 10;
-  private loginCheckIntervalTime: number = 60000;
-  private clients: Client[] = [];
+  private loginCheckIntervalTime: number = 1000 * 60 * 10; // 默认 10 分钟
+  private clients: Client[] = Object.values(Client); // 默认登录所有客户端
 
   // clients 客户端
   public readonly news: NewsClient;
@@ -61,8 +62,11 @@ export default class HUST {
 
   /**
    * 登录
+   * @param info 登录信息
+   * @param check 是否检查登录状态，默认为 true \
+   * 如果上下文中已经确认未登录，则可以设置为 false 来跳过检查
    */
-  async login(info: LoginInfo): Promise<boolean> {
+  async login(info: LoginInfo, check = true): Promise<boolean> {
     if (!info) {
       throw new Error('Login info is required');
     }
@@ -72,27 +76,14 @@ export default class HUST {
     let loginRetryCount = 0;
     let loginSuccess = false;
 
-    try {
-      const isLoggedIn = await this.isLoggedIn();
-
-      if (isLoggedIn) {
-        return true;
-      }
-
-      if (this.isLoggingIn) {
-        return false;
-      }
-      this.isLoggingIn = true;
-
+    // 直接封装执行登录的操作，为了可以跳过检查
+    const doLogin = async () => {
       while (loginRetryCount < maxRetries && !loginSuccess) {
         try {
           loginSuccess = await this.auth.login(info, this.phoneCodeCallback);
 
           if (loginSuccess) {
             let loginClients = this.clients;
-            if (loginClients.length === 0) {
-              loginClients = Object.values(Client);
-            }
             await Promise.all(
               loginClients.map((client) => this.loginClient(client)),
             );
@@ -105,6 +96,24 @@ export default class HUST {
         }
       }
       return false;
+    };
+
+    try {
+      // 如果正在登录中，直接返回 false
+      if (this.isLoggingIn) {
+        return false;
+      }
+      this.isLoggingIn = true;
+
+      if (check) {
+        const isLoggedIn = await this.isLoggedIn();
+
+        if (isLoggedIn) {
+          return true;
+        }
+      }
+
+      return await doLogin();
     } finally {
       this.isLoggingIn = false;
       if (!this.loginCheckTimer) {
@@ -156,10 +165,40 @@ export default class HUST {
   }
 
   /**
-   * 检查登录状态
+   * 检查特定客户端的登录状态 \
+   * 如果一个 client 涉及多个域名，则需要使用 Promise.all 来并行检查所有域名的登录状态
+   *
+   * @private
+   * @async
+   * @param {Client} client 客户端
+   * @returns {Promise<boolean>} 如果已登录返回 true，否则返回 false
+   */
+  private async checkClient(client: Client): Promise<boolean> {
+    switch (client) {
+      case Client.news:
+        return await this.auth.checkONE();
+      default:
+        throw new Error(`Client ${client} not supported`);
+    }
+  }
+
+  /**
+   * 检查所有服务的登录状态
    */
   async isLoggedIn(): Promise<boolean> {
-    return await this.auth.checkLoginStatus();
+    const isAuthLogin = await this.auth.checkLoginStatus();
+
+    if (!isAuthLogin) {
+      return false;
+    }
+
+    // 检查所有客户端的登录状态
+    const clientCheckPromises = this.clients.map((client) =>
+      this.checkClient(client),
+    );
+    const clientResults = await Promise.all(clientCheckPromises);
+
+    return clientResults.every((result) => result);
   }
 
   async handleRequest<T>(requestFn: () => Promise<T>): Promise<T> {
@@ -178,15 +217,26 @@ export default class HUST {
     try {
       return await requestFn();
     } catch (error) {
-      if (isAuthError(error)) {
-        const reLoginSuccess = await this.login(this.loginInfo!);
-        if (reLoginSuccess) {
-          return await requestFn();
+      // 只处理 AxiosError，其他错误应该在 requestFn 内部处理
+      if (error instanceof AxiosError) {
+        if (isAuthError(error)) {
+          const reLoginSuccess = await this.login(this.loginInfo!, false);
+          if (reLoginSuccess) {
+            return await requestFn();
+          } else {
+            console.error('Re-login failed');
+            throw error;
+          }
         } else {
-          console.error('Re-login failed');
           throw error;
         }
       } else {
+        console.error(
+          '[HUST SDK] Non-AxiosError caught in handleRequest. ' +
+            'Please handle this error type in your requestFn. ' +
+            'handleRequest only processes AxiosError automatically.',
+          error,
+        );
         throw error;
       }
     }
@@ -248,10 +298,16 @@ const hust = new HUST({
 
 const now = new Date();
 
-// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 console.log('Initializing HUST SDK...');
-// await sleep(5000);
+await sleep(1000 * 2);
+// 修改 cookie
+const cookieManager = hust.getCookieManager();
+await cookieManager.setCookies('https://one.hust.edu.cn/dcp/', [
+  'dcp_session_id=pXgh7rQPQeL8M4C2!255489232; Path=/; HttpOnly; SameSite=Lax',
+]);
+console.log('Cookie set successfully.');
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 

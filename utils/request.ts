@@ -1,4 +1,9 @@
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import type {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios';
 import type { RedirectOptions } from '@/types/utils';
 
 export async function followRedirect(
@@ -49,12 +54,24 @@ export async function followRedirect(
   return finalResponse;
 }
 
-export function isAuthError(error: any): boolean {
+export function isAuthError(error: AxiosError): boolean {
   if (error && error.response) {
     return (
-      error.response === 302 &&
+      error.response.status === 302 &&
       error.response.headers.location.includes('login')
     );
   }
   return false;
+}
+
+/**
+ * 根据响应判断是否未登录 \
+ * 假定未登录的响应状态码为 302，且 Location 头包含 'login' 字符串
+ *
+ * @export
+ * @param {AxiosResponse} response
+ * @returns {boolean}
+ */
+export function isNeedAuth(response: AxiosResponse): boolean {
+  return response.status === 302 && response.headers.location.includes('login');
 }
