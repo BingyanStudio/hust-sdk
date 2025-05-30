@@ -1,7 +1,12 @@
 import CookieManager from '@/auth/cookie-manager';
-import type { LoginInfo, LoginTickets, PhoneCodeCallback, RSAResponse } from '@/types/auth';
+import type {
+  LoginInfo,
+  LoginTickets,
+  PhoneCodeCallback,
+  RSAResponse,
+} from '@/types/auth';
 import { recognizeGifCaptcha } from '@/utils/dynamic-code';
-import { followRedirect } from '@/utils/request';
+import { followRedirect, isNeedAuth } from '@/utils/request';
 import { rsaEncrypt } from '@/utils/rsa';
 import { useCookie } from '@/utils/use-cookie';
 import type { AxiosInstance, AxiosResponse } from 'axios';
@@ -28,7 +33,7 @@ export default class CASAuth {
   }
 
   /**
-   * 检查登录状态
+   * 检查 hustpass 登录状态
    * @returns {boolean} 已登录为 true，否则为 false
    */
   async checkLoginStatus() {
@@ -216,90 +221,8 @@ export default class CASAuth {
     return false;
   }
 
-  async testHUBS() {
-    const apiUrl = 'https://hubs.hust.edu.cn/schedule/getCurrentXq';
-
-    try {
-      const response = await this.axios.get(apiUrl);
-      console.log('testAuth success with status', response.status);
-      console.log('testAuth response', response.data);
-    } catch (e) {
-      console.log('testAuth error', e);
-    }
-  }
-
-  async testPETYXY() {
-    const url = 'http://petyxy.hust.edu.cn/pft/app/resultList?periodId=20242';
-
-    try {
-      let response = await this.axios.get(url);
-
-      console.log('testPE success with status', response.status);
-      console.log('testPE response', response.data);
-      return response.status === 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  async testONE() {
-    const url = 'https://one.hust.edu.cn/dcp/pim/pim.action';
-
-    try {
-      const response = await this.axios.post(
-        url,
-        {
-          map: {
-            method: 'getAllPimList',
-            params: {
-              javaClass: 'java.util.ArrayList',
-              list: ['', '', '', '', '', ''],
-            },
-            pm: {
-              javaClass: 'com.neusoft.education.edp.client.PageManager',
-              pageSize: 10,
-              pageNo: '1',
-              totalCount: -1,
-              order: null,
-              filters: {
-                javaClass: 'com.neusoft.education.edp.client.QueryFilter',
-                parameters: {
-                  javaClass: 'java.util.HashMap',
-                  map: {},
-                },
-              },
-              pageSumcols: null,
-              pageSums: null,
-              sumcols: null,
-              isNewSum: null,
-              sums: null,
-              resPojoName: '',
-            },
-          },
-          javaClass: 'java.util.HashMap',
-        },
-        {
-          headers: {
-            Clienttype: 'json',
-            Render: 'json',
-          },
-        },
-      );
-      console.log('testONE success with status', response.status);
-      console.log('testONE response', response.data);
-      return response.status === 200;
-    } catch (e) {
-      return false;
-    }
-  }
-
   async loginPETYXY() {
     const url = 'https://petyxy.hust.edu.cn/pft/app/resultList';
-    const isLogin = await this.checkLoginStatus();
-
-    if (!isLogin) {
-      return false;
-    }
 
     try {
       let response = await this.axios.get(url);
@@ -319,11 +242,6 @@ export default class CASAuth {
 
   async loginHUBS() {
     const url = 'https://hubs.hust.edu.cn';
-    const isLogin = await this.checkLoginStatus();
-
-    if (!isLogin) {
-      return false;
-    }
 
     try {
       let response = await this.axios.get(url);
@@ -346,11 +264,6 @@ export default class CASAuth {
 
   async loginONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
-    const isLogin = await this.checkLoginStatus();
-
-    if (!isLogin) {
-      return false;
-    }
 
     try {
       let response = await this.axios.get(url);
@@ -369,6 +282,25 @@ export default class CASAuth {
     } catch (e) {
       return false;
     }
+  }
+
+  // 检查对应网站是否登录
+  async checkPETYXY() {
+    const url = 'https://petyxy.hust.edu.cn';
+    const response = await this.axios.get(url);
+    return !isNeedAuth(response);
+  }
+
+  async checkHUBS() {
+    const url = 'https://hubs.hust.edu.cn';
+    const response = await this.axios.get(url);
+    return !isNeedAuth(response);
+  }
+
+  async checkONE() {
+    const url = 'https://one.hust.edu.cn/dcp/';
+    const response = await this.axios.get(url);
+    return !isNeedAuth(response);
   }
 }
 
