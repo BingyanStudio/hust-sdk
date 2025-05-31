@@ -287,20 +287,35 @@ export default class CASAuth {
   // 检查对应网站是否登录
   async checkPETYXY() {
     const url = 'https://petyxy.hust.edu.cn';
-    const response = await this.axios.get(url);
-    return !isNeedAuth(response);
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
   }
 
   async checkHUBS() {
     const url = 'https://hubs.hust.edu.cn';
-    const response = await this.axios.get(url);
-    return !isNeedAuth(response);
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
   }
 
   async checkONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
-    const response = await this.axios.get(url);
-    return !isNeedAuth(response);
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
   }
 }
 
