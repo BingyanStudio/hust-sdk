@@ -298,16 +298,10 @@ const hust = new HUST({
 
 const now = new Date();
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 console.log('Initializing HUST SDK...');
-await sleep(1000 * 2);
-// 修改 cookie
-const cookieManager = hust.getCookieManager();
-await cookieManager.setCookies('https://one.hust.edu.cn/dcp/', [
-  'dcp_session_id=pXgh7rQPQeL8M4C2!255489232; Path=/; HttpOnly; SameSite=Lax',
-]);
-console.log('Cookie set successfully.');
+// await sleep(1000 * 2);
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 
