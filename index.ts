@@ -189,6 +189,13 @@ export default class HUST {
     switch (client) {
       case Client.news:
         return await this.auth.checkONE();
+      case Client.course:
+        return (await Promise.all([
+          this.auth.checkPhysics(),
+          this.auth.checkHUBM(),
+          this.auth.checkMHUB(),
+          this.auth.checkHUBS(),  
+        ])).every((item) => item);
       default:
         throw new Error(`Client ${client} not supported`);
     }

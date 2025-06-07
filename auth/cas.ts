@@ -263,7 +263,7 @@ export default class CASAuth {
   }
 
   async loginHUBM() {
-    const url = 'http://hub.m.hust.edu.cn/hub_weix';
+    const url = 'https://hub.m.hust.edu.cn/hub_weix';
     const isLogin = await this.checkLoginStatus();
 
     if (!isLogin) {
@@ -328,6 +328,7 @@ export default class CASAuth {
       return false;
     }
   }
+
   async loginPhysics() {
     const url = 'http://empxk.hust.edu.cn/';
     const isLogin = await this.checkLoginStatus();
@@ -360,6 +361,28 @@ export default class CASAuth {
 
   async checkHUBS() {
     const url = 'https://hubs.hust.edu.cn';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkHUBM() {
+    const url = 'http://hub.m.hust.edu.cn/hub_weix/';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkMHUB() {
+    const url = 'https://mhub.hust.edu.cn/';
 
     try {
       const response = await this.axios.get(url);
