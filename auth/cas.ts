@@ -263,7 +263,7 @@ export default class CASAuth {
   }
 
   async loginHUBM() {
-    const url = 'https://hub.m.hust.edu.cn/hub_weix';
+    const url = 'http://hub.m.hust.edu.cn/hub_weix';
     const isLogin = await this.checkLoginStatus();
 
     if (!isLogin) {
@@ -371,7 +371,7 @@ export default class CASAuth {
   }
 
   async checkHUBM() {
-    const url = 'http://hub.m.hust.edu.cn/hub_weix/';
+    const url = 'http://hub.m.hust.edu.cn/hub_weix/menuPage.do?CDBH=9128';
 
     try {
       const response = await this.axios.get(url);

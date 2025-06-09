@@ -325,7 +325,10 @@ console.log('Initializing HUST SDK...');
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
 
-const res2 = await hust.course.getExaminationArrangements('20241');
+const res2 = await hust.course.getPracticeCourseSchedule({
+  start: '2025-01-01',
+  end: '2025-09-30',
+});
 console.log('Examination Arrangements:', res2);
 
 console.log(`initialized after ${new Date().getTime() - now.getTime()}ms`);

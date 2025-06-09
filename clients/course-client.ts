@@ -12,6 +12,7 @@ import {
   getNormalCourseSchedule,
 } from './course/course';
 import { ExaminationType } from '@/types/clients/course/course';
+import { getPracticeCourseSchedule } from './course/practice';
 
 export default class CourseClient {
   protected readonly axios: AxiosInstance;
@@ -99,6 +100,21 @@ export default class CourseClient {
         pageSize,
         keyword,
         type,
+      }),
+    );
+  }
+
+  async getPracticeCourseSchedule({
+    start,
+    end,
+  }: {
+    start: string;
+    end: string;
+  }): Promise<any[]> {
+    return await this.hust.handleRequest(() =>
+      getPracticeCourseSchedule(this.axios, {
+        start,
+        end,
       }),
     );
   }
