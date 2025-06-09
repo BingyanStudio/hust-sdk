@@ -2,6 +2,7 @@ import type { LoginInfo, PhoneCodeCallback } from './auth';
 
 export enum Client {
   news = 'news',
+  course = 'course',
 }
 
 export interface HUSTConfig {

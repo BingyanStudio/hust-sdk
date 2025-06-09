@@ -262,6 +262,51 @@ export default class CASAuth {
     }
   }
 
+  async loginHUBM() {
+    const url = 'http://hub.m.hust.edu.cn/hub_weix';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+      response = await followRedirect(response, this.axios);
+      
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async loginMHUB() {
+    const url = 'http://mhub.hust.edu.cn/';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+
+      if (
+        response.status === 302 &&
+        response.headers.location.includes('login')
+      ) {
+        response = await this.axios.get(
+          `${CASAuth.CAS_URL}/login?service=${encodeURIComponent('https://mhub.hust.edu.cn/cas/login')}`,
+        );
+
+        response = await followRedirect(response, this.axios);
+      }
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async loginONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
 
@@ -278,6 +323,24 @@ export default class CASAuth {
 
         response = await followRedirect(response, this.axios);
       }
+      return response.status === 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async loginPhysics() {
+    const url = 'http://empxk.hust.edu.cn/';
+    const isLogin = await this.checkLoginStatus();
+
+    if (!isLogin) {
+      return false;
+    }
+
+    try {
+      let response = await this.axios.get(url);
+      response = await followRedirect(response, this.axios);
+
       return response.status === 200;
     } catch (e) {
       return false;
@@ -307,8 +370,41 @@ export default class CASAuth {
     }
   }
 
+  async checkHUBM() {
+    const url = 'http://hub.m.hust.edu.cn/hub_weix/menuPage.do?CDBH=9128';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkMHUB() {
+    const url = 'https://mhub.hust.edu.cn/';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
   async checkONE() {
     const url = 'https://one.hust.edu.cn/dcp/';
+
+    try {
+      const response = await this.axios.get(url);
+      return !isNeedAuth(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async checkPhysics() {
+    const url = 'http://empxk.hust.edu.cn/';
 
     try {
       const response = await this.axios.get(url);

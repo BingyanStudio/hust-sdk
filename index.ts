@@ -6,6 +6,7 @@ import { Client, type HUSTConfig } from '@/types/hust';
 import { isAuthError } from './utils/request';
 import { getPhoneCodeFromConsole } from './utils/console-input';
 import { AxiosError } from 'axios';
+import CourseClient from './clients/course-client';
 
 export default class HUST {
   private readonly cookieManager: CookieManager;
@@ -24,11 +25,13 @@ export default class HUST {
 
   // clients 客户端
   public readonly news: NewsClient;
+  public readonly course: CourseClient;
 
   constructor(config?: HUSTConfig) {
     this.cookieManager = new CookieManager();
     this.auth = new CASAuth(this.cookieManager);
     this.news = new NewsClient(this);
+    this.course = new CourseClient(this);
 
     if (config?.maxLoginRetries) {
       this.maxLoginRetries = config.maxLoginRetries;
@@ -159,6 +162,15 @@ export default class HUST {
     switch (client) {
       case Client.news:
         return await this.auth.loginONE();
+      case Client.course:
+        return (
+          await Promise.all([
+            this.auth.loginPhysics(),
+            this.auth.loginHUBM(),
+            this.auth.loginHUBS(),
+            this.auth.loginMHUB(),
+          ])
+        ).every((item) => item);
       default:
         throw new Error(`Client ${client} not supported`);
     }
@@ -177,6 +189,13 @@ export default class HUST {
     switch (client) {
       case Client.news:
         return await this.auth.checkONE();
+      case Client.course:
+        return (await Promise.all([
+          this.auth.checkPhysics(),
+          this.auth.checkHUBM(),
+          this.auth.checkMHUB(),
+          this.auth.checkHUBS(),  
+        ])).every((item) => item);
       default:
         throw new Error(`Client ${client} not supported`);
     }
@@ -294,6 +313,7 @@ const hust = new HUST({
     studentId: process.env.HUST_SDK_STUDENT_ID!,
     password: process.env.HUST_SDK_PASSWORD!,
   },
+  loginCheckInterval: 600000, // 10 分钟检查一次登录状态
 });
 
 const now = new Date();
@@ -304,5 +324,11 @@ console.log('Initializing HUST SDK...');
 // await sleep(1000 * 2);
 const res = await hust.news.getNewsList();
 console.log('News List:', res);
+
+const res2 = await hust.course.getPracticeCourseSchedule({
+  start: '2025-01-01',
+  end: '2025-09-30',
+});
+console.log('Examination Arrangements:', res2);
 
 console.log(`initialized after ${new Date().getTime() - now.getTime()}ms`);

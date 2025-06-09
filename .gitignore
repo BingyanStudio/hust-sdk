@@ -35,3 +35,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Cookie
 cookie.json
+
+# VSCode Specific
+.vscode/settings.json
